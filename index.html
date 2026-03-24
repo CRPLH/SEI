@@ -123,7 +123,7 @@ body{background:#f5f5f3;height:100vh;display:flex;flex-direction:column;overflow
   <div class="profile-btns">
     <button class="pbtn" onclick="login('joan')">Joan &middot; EAP</button>
     <button class="pbtn" onclick="login('maria')">Maria &middot; CRP</button>
-    <button class="pbtn" onclick="login('roser')">Roser &middot; ELIC</button>
+    <button class="pbtn" onclick="login('berta')">Berta &middot; ELIC</button>
     <button class="pbtn admin" onclick="login('admin')">Superusuari</button>
   </div>
   <p class="hint">Cada perfil veu únicament els seus centres assignats</p>
@@ -201,7 +201,7 @@ body{background:#f5f5f3;height:100vh;display:flex;flex-direction:column;overflow
 var users = {
   joan:  { name:'Joan Puig',   team:'EAP',   av:'JP', avc:'av-eap',   tc:'t-eap',  cc:'card-eap',  centres:['capsa','lluna','mare'] },
   maria: { name:'Maria Valls', team:'CRP',   av:'MV', avc:'av-crp',   tc:'t-crp',  cc:'card-crp',  centres:['capsa','sol','mare'] },
-  roser: { name:'Roser Font',  team:'ELIC',  av:'RF', avc:'av-elic',  tc:'t-elic', cc:'card-elic', centres:['capsa','lluna','riu'] },
+  berta: { name:'Berta Font',  team:'ELIC',  av:'RF', avc:'av-elic',  tc:'t-elic', cc:'card-elic', centres:['capsa','lluna','riu'] },
   admin: { name:'Superusuari', team:'Admin', av:'SU', avc:'av-admin', tc:'t-eap',  cc:'card-admin',centres:['capsa','lluna','sol','riu','mare','nord'] }
 };
 var centres = {
@@ -219,18 +219,18 @@ var TIPOS = { notes:'Notes / observacions', plans:"Pla d'actuació", seguiment:"
 var lastSeen = {
   joan:  { capsa:'2025-03-11', lluna:'2025-03-09', mare:'2025-02-01' },
   maria: { capsa:'2025-03-13', sol:'2025-03-01',   mare:'2025-03-15' },
-  roser: { capsa:'2025-03-14', lluna:'2025-03-01', riu:'2025-03-01' },
+  Berta: { capsa:'2025-03-14', lluna:'2025-03-01', riu:'2025-03-01' },
   admin: {}
 };
 
 var entries = [
   { id:1,  centre:'capsa', autor:'joan',  tipo:'notes',     data:'2025-03-10', vis:'Visita presencial',     text:"Parlat amb la tutora de 3r sobre dificultats de comprensió lectora d'en Marc. Es revisarà el PI abans de Pasqua." },
   { id:2,  centre:'capsa', autor:'maria', tipo:'plans',     data:'2025-03-12', vis:'Visita presencial',     text:"Pla de suport per a alumnes de 5è amb NEE. La coordinadora pedagògica s'incorpora a les properes reunions de seguiment." },
-  { id:3,  centre:'capsa', autor:'roser', tipo:'seguiment', data:'2025-03-15', vis:'Videoconferència',      text:"4 de 6 alumnes han assolit el nivell esperat en llengua. Cal reforçar l'expressió oral al proper trimestre." },
+  { id:3,  centre:'capsa', autor:'Berta', tipo:'seguiment', data:'2025-03-15', vis:'Videoconferència',      text:"4 de 6 alumnes han assolit el nivell esperat en llengua. Cal reforçar l'expressió oral al proper trimestre." },
   { id:4,  centre:'lluna', autor:'joan',  tipo:'notes',     data:'2025-03-08', vis:'Assessorament puntual', text:"Consulta sobre possible assetjament entre iguals. S'ha activat el protocol i s'han informat les famílies." },
   { id:5,  centre:'mare',  autor:'maria', tipo:'seguiment', data:'2025-03-14', vis:'Reunió de coordinació', text:"Primera reunió trimestral. Bon ambient. Pendents les adaptacions curriculars de dos alumnes de 2n ESO." },
   { id:6,  centre:'capsa', autor:'joan',  tipo:'seguiment', data:'2025-02-20', vis:'Visita presencial',     text:"Revisió del pla d'actuació anterior. Es compleixen 3 dels 4 objectius marcats. El quart queda pendent per al proper mes." },
-  { id:7,  centre:'lluna', autor:'roser', tipo:'notes',     data:'2025-03-10', vis:'Visita presencial',     text:"Detecció d'un alumne de 4t amb possible dislèxia. S'ha acordat iniciar l'avaluació psicopedagògica." },
+  { id:7,  centre:'lluna', autor:'Berta', tipo:'notes',     data:'2025-03-10', vis:'Visita presencial',     text:"Detecció d'un alumne de 4t amb possible dislèxia. S'ha acordat iniciar l'avaluació psicopedagògica." },
   { id:8,  centre:'mare',  autor:'joan',  tipo:'plans',     data:'2025-03-16', vis:'Visita presencial',     text:"Nou pla d'actuació per al departament d'orientació. Prioritat: millora de la detecció precoç de necessitats." }
 ];
 
