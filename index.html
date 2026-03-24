@@ -554,7 +554,22 @@ function appendToSheet(row, callback) {
     method: 'POST',
     headers: { 'Authorization':'Bearer '+accessToken, 'Content-Type':'application/json' },
     body: JSON.stringify({ values: [row] })
-  }).then(function(r){ callback(r.ok); }).catch(function(){ callback(false); });
+  }).then(function(r){
+    if (r.ok) { callback(true); return; }
+    r.json().then(function(errData){
+      var msg = (errData && errData.error && errData.error.message) ? errData.error.message : JSON.stringify(errData);
+      var status = r.status;
+      console.error('Sheets API error', status, msg);
+      // Mostra l'error exacte a l'usuari per facilitar el diagnòstic
+      var detall = 'Error ' + status + ': ' + msg;
+      alert('No s\'ha pogut desar.\n\n' + detall + '\n\nCopia aquest missatge i comunica\'l al desenvolupador.');
+      callback(false);
+    }).catch(function(){ callback(false); });
+  }).catch(function(err){
+    console.error('Fetch error:', err);
+    alert('Error de xarxa en contactar amb Google Sheets:\n' + err.message);
+    callback(false);
+  });
 }
 </script>
 </body>
