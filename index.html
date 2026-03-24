@@ -3,29 +3,34 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>AssessorApp · Prototip</title>
+<title>AssessorApp</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:'Segoe UI',system-ui,sans-serif;}
 body{background:#f5f5f3;height:100vh;display:flex;flex-direction:column;overflow:hidden;}
+
+/* LOGIN */
 #login{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;gap:14px;padding:20px;}
 #app{display:none;height:100vh;flex-direction:column;}
 
 .login-card{background:#fff;border:1px solid #e0e0e0;border-radius:12px;padding:28px 24px;width:100%;max-width:360px;display:flex;flex-direction:column;align-items:center;gap:14px;box-shadow:0 2px 12px rgba(0,0,0,.07);}
 .login-card h2{font-size:20px;font-weight:600;color:#1a1a1a;}
 .login-card p{font-size:13px;color:#888;text-align:center;line-height:1.5;}
-.profile-btns{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;width:100%;max-width:360px;}
-.pbtn{cursor:pointer;border:1px solid #ddd;background:#fff;border-radius:8px;padding:9px 16px;font-size:14px;color:#333;}
-.pbtn:hover{background:#f0effe;border-color:#7f77dd;}
-.pbtn.admin{background:#3c3489;color:#fff;border-color:#3c3489;}
-.pbtn.admin:hover{background:#534ab7;}
-.hint{font-size:12px;color:#aaa;text-align:center;}
 
+.google-btn{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid #ddd;border-radius:8px;padding:10px 20px;font-size:14px;color:#333;cursor:pointer;font-weight:500;width:100%;justify-content:center;transition:background .15s,box-shadow .15s;}
+.google-btn:hover{background:#f8f8f8;box-shadow:0 2px 8px rgba(0,0,0,.1);}
+.google-btn svg{width:18px;height:18px;flex-shrink:0;}
+
+.login-error{background:#fef2f2;border:1px solid #fca5a5;border-radius:8px;padding:10px 14px;font-size:13px;color:#b91c1c;text-align:center;width:100%;max-width:360px;display:none;}
+
+/* TOPBAR */
 .topbar{background:#fff;border-bottom:1px solid #e5e5e5;padding:10px 18px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
 .top-left span:first-child{display:block;font-size:15px;font-weight:600;color:#1a1a1a;}
 .top-left span:last-child{display:block;font-size:12px;color:#888;}
 .nova-btn{background:#3c3489;color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:13px;cursor:pointer;font-weight:500;}
 .nova-btn:hover{background:#534ab7;}
+.nova-btn:disabled{background:#aaa;cursor:not-allowed;}
 
+/* LAYOUT */
 .layout{display:flex;flex:1;overflow:hidden;}
 .sidebar{width:230px;min-width:230px;background:#fff;border-right:1px solid #e5e5e5;display:flex;flex-direction:column;overflow-y:auto;}
 .sidebar-lbl{font-size:11px;font-weight:600;color:#bbb;text-transform:uppercase;letter-spacing:.06em;padding:14px 14px 5px;}
@@ -36,9 +41,11 @@ body{background:#f5f5f3;height:100vh;display:flex;flex-direction:column;overflow
 .badge{background:#e24b4a;color:#fff;font-size:10px;font-weight:700;border-radius:20px;padding:1px 6px;min-width:18px;text-align:center;flex-shrink:0;}
 
 .userbar{border-top:1px solid #e5e5e5;padding:10px 14px;display:flex;align-items:center;gap:8px;margin-top:auto;}
-.u-name{font-size:13px;font-weight:600;color:#1a1a1a;}
+.u-avatar{width:30px;height:30px;border-radius:50%;flex-shrink:0;}
+.u-info{flex:1;min-width:0;}
+.u-name{font-size:13px;font-weight:600;color:#1a1a1a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .u-team{font-size:11px;color:#888;}
-.out-btn{margin-left:auto;cursor:pointer;border:1px solid #ddd;background:#fff;border-radius:6px;padding:4px 8px;font-size:11px;color:#555;}
+.out-btn{cursor:pointer;border:1px solid #ddd;background:#fff;border-radius:6px;padding:4px 8px;font-size:11px;color:#555;flex-shrink:0;}
 .out-btn:hover{background:#fef2f2;border-color:#f09595;color:#a32d2d;}
 
 .main{flex:1;overflow-y:auto;padding:18px;}
@@ -55,12 +62,12 @@ body{background:#f5f5f3;height:100vh;display:flex;flex-direction:column;overflow
 .stat .val{font-size:24px;font-weight:600;color:#1a1a1a;}
 .stat .lbl{font-size:11px;color:#888;margin-top:2px;}
 
-/* Cards amb color per equip */
-.card{border-radius:10px;padding:14px;margin-bottom:10px;border-left:4px solid transparent;}
-.card-eap{background:#f5f3ff;border-left-color:#7f77dd;border:1px solid #d8d4f5;border-left:4px solid #7f77dd;}
-.card-crp{background:#f0faf5;border-left-color:#1d9e75;border:1px solid #b8e8d5;border-left:4px solid #1d9e75;}
-.card-elic{background:#fef5f1;border-left-color:#d85a30;border:1px solid #f5c4b3;border-left:4px solid #d85a30;}
-.card-admin{background:#f0f6fd;border-left-color:#378add;border:1px solid #b5d4f4;border-left:4px solid #378add;}
+/* Cards */
+.card{border-radius:10px;padding:14px;margin-bottom:10px;}
+.card-eap{background:#f5f3ff;border:1px solid #d8d4f5;border-left:4px solid #7f77dd;}
+.card-crp{background:#f0faf5;border:1px solid #b8e8d5;border-left:4px solid #1d9e75;}
+.card-elic{background:#fef5f1;border:1px solid #f5c4b3;border-left:4px solid #d85a30;}
+.card-admin{background:#f0f6fd;border:1px solid #b5d4f4;border-left:4px solid #378add;}
 
 .card-head{display:flex;align-items:center;gap:10px;margin-bottom:6px;}
 .avatar{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0;}
@@ -72,6 +79,7 @@ body{background:#f5f5f3;height:100vh;display:flex;flex-direction:column;overflow
 .t-eap{background:#eeedfe;color:#3c3489;}
 .t-crp{background:#e1f5ee;color:#085041;}
 .t-elic{background:#faece7;color:#712b13;}
+.t-admin{background:#e6f1fb;color:#0c447c;}
 .t-tipo{background:rgba(0,0,0,.06);color:#555;}
 .card-meta{font-size:11px;color:#888;margin-bottom:8px;}
 .card-text{font-size:13px;color:#333;line-height:1.6;}
@@ -79,6 +87,16 @@ body{background:#f5f5f3;height:100vh;display:flex;flex-direction:column;overflow
 
 .empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:200px;gap:8px;color:#aaa;}
 .empty-icon{font-size:32px;}
+
+/* Llegenda + inici */
+.llegenda{display:flex;gap:14px;margin-bottom:14px;flex-wrap:wrap;align-items:center;}
+.leg-item{display:flex;align-items:center;gap:5px;font-size:12px;color:#555;}
+.leg-dot{width:12px;height:12px;border-radius:3px;flex-shrink:0;}
+.leg-eap{background:#7f77dd;}
+.leg-crp{background:#1d9e75;}
+.leg-elic{background:#d85a30;}
+.inici-btn{cursor:pointer;border:1px solid #ddd;background:#fff;border-radius:8px;padding:5px 11px;font-size:12px;color:#555;display:flex;align-items:center;gap:5px;margin-left:auto;}
+.inici-btn:hover{background:#f0effe;border-color:#7f77dd;color:#3c3489;}
 
 /* Modal */
 .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:100;align-items:center;justify-content:center;}
@@ -100,13 +118,12 @@ body{background:#f5f5f3;height:100vh;display:flex;flex-direction:column;overflow
 .btn-sec{cursor:pointer;border:1px solid #ddd;background:#fff;border-radius:8px;padding:8px 14px;font-size:13px;color:#333;font-family:inherit;}
 .btn-sec:hover{background:#f5f5f3;}
 
-/* Llegenda */
-.llegenda{display:flex;gap:14px;margin-bottom:14px;flex-wrap:wrap;}
-.leg-item{display:flex;align-items:center;gap:5px;font-size:12px;color:#555;}
-.leg-dot{width:12px;height:12px;border-radius:3px;flex-shrink:0;}
-.leg-eap{background:#7f77dd;}
-.leg-crp{background:#1d9e75;}
-.leg-elic{background:#d85a30;}
+/* Loading / toast */
+.loading{display:flex;flex-direction:column;align-items:center;justify-content:center;height:200px;gap:12px;color:#888;font-size:14px;}
+.spinner{width:32px;height:32px;border:3px solid #e0e0e0;border-top-color:#3c3489;border-radius:50%;animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1a1a1a;color:#fff;border-radius:8px;padding:10px 18px;font-size:13px;z-index:200;opacity:0;transition:opacity .3s;pointer-events:none;}
+.toast.show{opacity:1;}
 </style>
 </head>
 <body>
@@ -118,15 +135,12 @@ body{background:#f5f5f3;height:100vh;display:flex;flex-direction:column;overflow
     <h2>AssessorApp</h2>
     <p>Plataforma de seguiment de centres educatius.<br>Entra amb el teu compte Google XTEC.</p>
     <div style="width:100%;height:1px;background:#eee;"></div>
-    <p style="font-size:12px;color:#aaa;">Tria un perfil per explorar el prototip:</p>
+    <button class="google-btn" id="login-btn" onclick="startLogin()">
+      <svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/><path fill="none" d="M0 0h48v48H0z"/></svg>
+      Entra amb Google XTEC
+    </button>
   </div>
-  <div class="profile-btns">
-    <button class="pbtn" onclick="login('joan')">Joan &middot; EAP</button>
-    <button class="pbtn" onclick="login('maria')">Maria &middot; CRP</button>
-    <button class="pbtn" onclick="login('berta')">Berta &middot; ELIC</button>
-    <button class="pbtn admin" onclick="login('admin')">Superusuari</button>
-  </div>
-  <p class="hint">Cada perfil veu únicament els seus centres assignats</p>
+  <div class="login-error" id="login-error"></div>
 </div>
 
 <!-- APP -->
@@ -143,7 +157,8 @@ body{background:#f5f5f3;height:100vh;display:flex;flex-direction:column;overflow
       <div class="sidebar-lbl">Els meus centres</div>
       <div id="centre-list"></div>
       <div class="userbar">
-        <div>
+        <img class="u-avatar" id="u-avatar" src="" alt="" style="display:none;">
+        <div class="u-info">
           <div class="u-name" id="u-name"></div>
           <div class="u-team" id="u-team"></div>
         </div>
@@ -151,10 +166,7 @@ body{background:#f5f5f3;height:100vh;display:flex;flex-direction:column;overflow
       </div>
     </div>
     <div class="main" id="main">
-      <div class="empty">
-        <div class="empty-icon">🏫</div>
-        <div>Selecciona un centre per veure les entrades</div>
-      </div>
+      <div class="empty"><div class="empty-icon">🏫</div><div>Selecciona un centre per veure les entrades</div></div>
     </div>
   </div>
 </div>
@@ -192,227 +204,357 @@ body{background:#f5f5f3;height:100vh;display:flex;flex-direction:column;overflow
     </div>
     <div class="modal-actions">
       <button class="btn-sec" onclick="closeModal()">Cancel·lar</button>
-      <button class="nova-btn" onclick="save()">Desar entrada</button>
+      <button class="nova-btn" id="save-btn" onclick="save()">Desar entrada</button>
     </div>
   </div>
 </div>
 
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- Google Identity Services -->
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+
 <script>
-var users = {
-  joan:  { name:'Joan Puig',   team:'EAP',   av:'JP', avc:'av-eap',   tc:'t-eap',  cc:'card-eap',  centres:['capsa','lluna','mare'] },
-  maria: { name:'Maria Valls', team:'CRP',   av:'MV', avc:'av-crp',   tc:'t-crp',  cc:'card-crp',  centres:['capsa','sol','mare'] },
-  berta: { name:'Berta Font',  team:'ELIC',  av:'RF', avc:'av-elic',  tc:'t-elic', cc:'card-elic', centres:['capsa','lluna','riu'] },
-  admin: { name:'Superusuari', team:'Admin', av:'SU', avc:'av-admin', tc:'t-eap',  cc:'card-admin',centres:['capsa','lluna','sol','riu','mare','nord'] }
-};
-var centres = {
-  capsa: { nom:'Escola Capsa',         tipus:'Escola primària' },
-  lluna: { nom:'Escola la Lluna',      tipus:'Escola primària' },
-  sol:   { nom:'Escola el Sol',        tipus:'Escola primària' },
-  riu:   { nom:'Escola del Riu',       tipus:'Escola primària' },
-  mare:  { nom:'Institut Mare de Déu', tipus:'Institut de secundària' },
-  nord:  { nom:'Institut Nord',        tipus:'Institut de secundària' }
+// ── CONFIGURACIÓ ──────────────────────────────────────────────────────
+var CLIENT_ID   = '35717844423-5kmvsuhks3876m1rmh20mctlntsl4cfo.apps.googleusercontent.com';
+var API_KEY     = 'AIzaSyD_1MAkw-DwbKTBkTNXfJTXPvdNja5fWLI';
+var SHEET_ID    = '1Kc8f7kH_2hX4nvLU_E0kRtS_aLeEDfx3ZfMOga89c3k';
+var SCOPES      = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile';
+var ADMIN_EMAIL = 'a8930005@xtec.cat';
+
+var EQUIP_STYLES = {
+  EAP:   { cc:'card-eap',   avc:'av-eap',   tc:'t-eap'   },
+  CRP:   { cc:'card-crp',   avc:'av-crp',   tc:'t-crp'   },
+  ELIC:  { cc:'card-elic',  avc:'av-elic',  tc:'t-elic'  },
+  Admin: { cc:'card-admin', avc:'av-admin', tc:'t-admin' }
 };
 var TIPOS = { notes:'Notes / observacions', plans:"Pla d'actuació", seguiment:"Seguiment d'objectius" };
 
-// Data simulada: entrades existents amb dates anteriors a la última visita de cada usuari
-// "lastSeen" simula quan l'usuari va mirar per última vegada cada centre
-var lastSeen = {
-  joan:  { capsa:'2025-03-11', lluna:'2025-03-09', mare:'2025-02-01' },
-  maria: { capsa:'2025-03-13', sol:'2025-03-01',   mare:'2025-03-15' },
-  Berta: { capsa:'2025-03-14', lluna:'2025-03-01', riu:'2025-03-01' },
-  admin: {}
-};
+// ── ESTAT ─────────────────────────────────────────────────────────────
+var cu = null, cc = null, ctipo = 'notes', searchTerm = '';
+var users = {}, centres = {}, entries = [], lastSeen = {};
+var accessToken = null, tokenClient = null;
 
-var entries = [
-  { id:1,  centre:'capsa', autor:'joan',  tipo:'notes',     data:'2025-03-10', vis:'Visita presencial',     text:"Parlat amb la tutora de 3r sobre dificultats de comprensió lectora d'en Marc. Es revisarà el PI abans de Pasqua." },
-  { id:2,  centre:'capsa', autor:'maria', tipo:'plans',     data:'2025-03-12', vis:'Visita presencial',     text:"Pla de suport per a alumnes de 5è amb NEE. La coordinadora pedagògica s'incorpora a les properes reunions de seguiment." },
-  { id:3,  centre:'capsa', autor:'Berta', tipo:'seguiment', data:'2025-03-15', vis:'Videoconferència',      text:"4 de 6 alumnes han assolit el nivell esperat en llengua. Cal reforçar l'expressió oral al proper trimestre." },
-  { id:4,  centre:'lluna', autor:'joan',  tipo:'notes',     data:'2025-03-08', vis:'Assessorament puntual', text:"Consulta sobre possible assetjament entre iguals. S'ha activat el protocol i s'han informat les famílies." },
-  { id:5,  centre:'mare',  autor:'maria', tipo:'seguiment', data:'2025-03-14', vis:'Reunió de coordinació', text:"Primera reunió trimestral. Bon ambient. Pendents les adaptacions curriculars de dos alumnes de 2n ESO." },
-  { id:6,  centre:'capsa', autor:'joan',  tipo:'seguiment', data:'2025-02-20', vis:'Visita presencial',     text:"Revisió del pla d'actuació anterior. Es compleixen 3 dels 4 objectius marcats. El quart queda pendent per al proper mes." },
-  { id:7,  centre:'lluna', autor:'Berta', tipo:'notes',     data:'2025-03-10', vis:'Visita presencial',     text:"Detecció d'un alumne de 4t amb possible dislèxia. S'ha acordat iniciar l'avaluació psicopedagògica." },
-  { id:8,  centre:'mare',  autor:'joan',  tipo:'plans',     data:'2025-03-16', vis:'Visita presencial',     text:"Nou pla d'actuació per al departament d'orientació. Prioritat: millora de la detecció precoç de necessitats." }
-];
+// ── FORMAT DATES ──────────────────────────────────────────────────────
+function isoToDisplay(iso) {
+  if (!iso || iso.length < 10) return iso || '';
+  var p = iso.split('-');
+  return (p.length === 3) ? p[2]+'-'+p[1]+'-'+p[0] : iso;
+}
+function displayToIso(dd) {
+  if (!dd || dd.length < 10) return dd || '';
+  var p = dd.split('-');
+  return (p.length === 3 && p[2].length === 4) ? p[2]+'-'+p[1]+'-'+p[0] : dd;
+}
+// Compara dues dates (accepta ISO o DD-MM-AAAA) retornant valor negatiu/0/positiu
+function dateCmp(a, b) {
+  return toISO(a).localeCompare(toISO(b));
+}
+function toISO(d) {
+  if (!d) return '';
+  if (d.match(/^\d{2}-\d{2}-\d{4}$/)) return displayToIso(d);
+  return d;
+}
 
-var cu = null, cc = null, ctipo = 'notes', nid = 20;
-var searchTerm = '';
+// ── TOAST ─────────────────────────────────────────────────────────────
+function showToast(msg, dur) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(function(){ t.classList.remove('show'); }, dur || 2500);
+}
 
-function login(uid) {
+// ── LOGIN ─────────────────────────────────────────────────────────────
+function startLogin() {
+  if (typeof google === 'undefined') {
+    showError('No s\'ha pogut carregar Google Identity. Comprova la connexió a internet.');
+    return;
+  }
+  document.getElementById('login-error').style.display = 'none';
+  tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: CLIENT_ID,
+    scope: SCOPES,
+    callback: onTokenResponse
+  });
+  tokenClient.requestAccessToken({ prompt: 'select_account' });
+}
+
+function onTokenResponse(resp) {
+  if (resp.error) { showError('Error d\'autenticació: ' + resp.error); return; }
+  accessToken = resp.access_token;
+  showLoadingApp('Carregant dades...');
+  fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+    headers: { Authorization: 'Bearer ' + accessToken }
+  }).then(function(r){ return r.json(); })
+    .then(function(info){ loadDataAndLogin(info.email, info.name, info.picture); })
+    .catch(function(){ showError('No s\'ha pogut obtenir la informació de l\'usuari.'); });
+}
+
+function loadDataAndLogin(email, nom, foto) {
+  var base = 'https://sheets.googleapis.com/v4/spreadsheets/' + SHEET_ID + '/values/';
+  var hdrs = { Authorization: 'Bearer ' + accessToken };
+  Promise.all([
+    fetch(base + 'Usuaris',  { headers: hdrs }).then(function(r){ return r.json(); }),
+    fetch(base + 'Centres',  { headers: hdrs }).then(function(r){ return r.json(); }),
+    fetch(base + 'Entrades', { headers: hdrs }).then(function(r){ return r.json(); })
+  ]).then(function(res){
+    parseUsuaris(res[0]);
+    parseCentres(res[1]);
+    parseEntrades(res[2]);
+    doLogin(email, nom, foto);
+  }).catch(function(err){
+    showError('Error llegint el full de càlcul. Comprova que el full és accessible i que els noms dels fulls són Usuaris, Centres i Entrades.');
+  });
+}
+
+function parseUsuaris(data) {
+  users = {};
+  var rows = data.values || [];
+  for (var i = 1; i < rows.length; i++) {
+    var r = rows[i]; if (!r[0]) continue;
+    users[r[0]] = { id:r[0], nom:r[1]||'', equip:r[2]||'', email:(r[3]||'').toLowerCase(),
+      centres: r[4] ? r[4].split(',').map(function(s){ return s.trim(); }) : [] };
+  }
+}
+function parseCentres(data) {
+  centres = {};
+  var rows = data.values || [];
+  for (var i = 1; i < rows.length; i++) {
+    var r = rows[i]; if (!r[0]) continue;
+    centres[r[0]] = { nom:r[1]||'', tipus:r[2]||'' };
+  }
+}
+function parseEntrades(data) {
+  entries = [];
+  var rows = data.values || [];
+  for (var i = 1; i < rows.length; i++) {
+    var r = rows[i]; if (!r[0]) continue;
+    // data al full: DD-MM-AAAA → convertim a ISO per ordenar internament
+    var dataRaw = r[4] || '';
+    var dataIso = dataRaw.match(/^\d{2}-\d{2}-\d{4}$/) ? displayToIso(dataRaw) : dataRaw;
+    entries.push({ id:r[0], centre:r[1]||'', autor:r[2]||'', tipo:r[3]||'notes',
+      data:dataIso, vis:r[5]||'', text:r[6]||'' });
+  }
+}
+
+function doLogin(email, nom, foto) {
+  var emailLow = (email||'').toLowerCase();
+  var uid = null;
+  if (emailLow === ADMIN_EMAIL) {
+    uid = 'admin';
+    users['admin'] = { id:'admin', nom:nom||'Superusuari', equip:'Admin',
+      email:ADMIN_EMAIL, centres:Object.keys(centres) };
+  } else {
+    Object.keys(users).forEach(function(k){
+      if (users[k].email === emailLow) uid = k;
+    });
+  }
+  if (!uid) {
+    showError('Accés no autoritzat. El correu ' + email + ' no està registrat a l\'aplicació.');
+    document.getElementById('login').style.display = 'flex';
+    document.getElementById('app').style.display = 'none';
+    return;
+  }
   cu = uid;
   var u = users[uid];
+  document.getElementById('app').style.display = 'flex';
+  document.getElementById('login').style.display = 'none';
+  document.getElementById('u-name').textContent = u.nom;
+  document.getElementById('u-team').textContent = u.equip;
+  if (foto) {
+    var av = document.getElementById('u-avatar');
+    av.src = foto; av.style.display = 'block';
+  }
+  renderSidebar();
+  showMainEmpty();
+}
+
+function showError(msg) {
+  document.getElementById('login').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+  var el = document.getElementById('login-error');
+  el.textContent = msg; el.style.display = 'block';
+}
+function showLoadingApp(msg) {
   document.getElementById('login').style.display = 'none';
   document.getElementById('app').style.display = 'flex';
-  document.getElementById('u-name').textContent = u.name;
-  document.getElementById('u-team').textContent = u.team;
-  renderSidebar();
+  document.getElementById('main').innerHTML =
+    '<div class="loading"><div class="spinner"></div><div>'+(msg||'Carregant...')+'</div></div>';
+}
+function showMainEmpty() {
+  document.getElementById('main').innerHTML =
+    '<div class="empty"><div class="empty-icon">🏫</div><div>Selecciona un centre per veure les entrades</div></div>';
 }
 
 function logout() {
-  cu = null; cc = null; searchTerm = '';
+  cu = null; cc = null; searchTerm = ''; accessToken = null; lastSeen = {};
+  if (typeof google !== 'undefined') google.accounts.id.disableAutoSelect();
   document.getElementById('app').style.display = 'none';
   document.getElementById('login').style.display = 'flex';
+  document.getElementById('login-error').style.display = 'none';
+  document.getElementById('u-avatar').style.display = 'none';
   document.getElementById('top-nom').textContent = 'AssessorApp';
   document.getElementById('top-tipus').textContent = '';
   document.getElementById('nova-btn').style.display = 'none';
-  document.getElementById('main').innerHTML = '<div class="empty"><div class="empty-icon">🏫</div><div>Selecciona un centre per veure les entrades</div></div>';
 }
 
-function countNew(uid, cid) {
-  if (uid === 'admin') return 0;
-  var seen = (lastSeen[uid] && lastSeen[uid][cid]) ? lastSeen[uid][cid] : '1900-01-01';
-  return entries.filter(function(e) {
-    return e.centre === cid && e.autor !== uid && e.data > seen;
-  }).length;
-}
-
+// ── SIDEBAR ───────────────────────────────────────────────────────────
 function renderSidebar() {
-  var u = users[cu];
-  var html = '';
+  var u = users[cu]; var html = '';
   u.centres.forEach(function(cid) {
-    var c = centres[cid];
-    var ico = c.tipus.includes('Institut') ? '🏛️' : '🏫';
+    var c = centres[cid]; if (!c) return;
+    var ico = (c.tipus||'').toLowerCase().includes('institut') ? '🏛️' : '🏫';
     var n = countNew(cu, cid);
-    var badgeHtml = n > 0 ? '<span class="badge">' + n + '</span>' : '';
-    html += '<div class="citem" id="ci-' + cid + '" onclick="selCentre(\'' + cid + '\')">';
-    html += '<span class="citem-nom">' + ico + ' ' + c.nom + '</span>';
-    html += badgeHtml;
-    html += '</div>';
+    var badge = n > 0 ? '<span class="badge">'+n+'</span>' : '';
+    html += '<div class="citem" id="ci-'+cid+'" onclick="selCentre(\''+cid+'\')">';
+    html += '<span class="citem-nom">'+ico+' '+escHtml(c.nom)+'</span>'+badge+'</div>';
   });
   document.getElementById('centre-list').innerHTML = html;
 }
+function countNew(uid, cid) {
+  if (uid === 'admin') return 0;
+  var seen = (lastSeen[uid] && lastSeen[uid][cid]) ? lastSeen[uid][cid] : '1900-01-01';
+  return entries.filter(function(e){ return e.centre===cid && e.autor!==uid && e.data>seen; }).length;
+}
 
+// ── CENTRE ────────────────────────────────────────────────────────────
 function selCentre(cid) {
   cc = cid; searchTerm = '';
-  document.querySelectorAll('.citem').forEach(function(el) { el.classList.remove('active'); });
-  var ci = document.getElementById('ci-' + cid);
-  if (ci) ci.classList.add('active');
+  document.querySelectorAll('.citem').forEach(function(el){ el.classList.remove('active'); });
+  var ci = document.getElementById('ci-'+cid); if (ci) ci.classList.add('active');
   var c = centres[cid];
   document.getElementById('top-nom').textContent = c.nom;
   document.getElementById('top-tipus').textContent = c.tipus;
-  document.getElementById('nova-btn').style.display = cu === 'admin' ? 'none' : 'block';
+  document.getElementById('nova-btn').style.display = 'block';
+  if (cu !== 'admin') {
+    if (!lastSeen[cu]) lastSeen[cu] = {};
+    lastSeen[cu][cid] = new Date().toISOString().split('T')[0];
+  }
   renderMain(cid);
 }
+function goHome() {
+  cc = null; searchTerm = '';
+  document.querySelectorAll('.citem').forEach(function(el){ el.classList.remove('active'); });
+  document.getElementById('top-nom').textContent = 'AssessorApp';
+  document.getElementById('top-tipus').textContent = '';
+  document.getElementById('nova-btn').style.display = 'none';
+  showMainEmpty();
+}
 
+// ── MAIN ──────────────────────────────────────────────────────────────
 function renderMain(cid) {
-  var seen = (cu !== 'admin' && lastSeen[cu] && lastSeen[cu][cid]) ? lastSeen[cu][cid] : '9999-99-99';
-  var all = entries.filter(function(e) { return e.centre === cid; })
-                   .sort(function(a,b) { return b.data.localeCompare(a.data); });
-
-  var filtered = searchTerm
-    ? all.filter(function(e) {
-        var q = searchTerm.toLowerCase();
-        return e.text.toLowerCase().includes(q) ||
-               users[e.autor].name.toLowerCase().includes(q) ||
-               users[e.autor].team.toLowerCase().includes(q) ||
-               TIPOS[e.tipo].toLowerCase().includes(q) ||
-               e.data.includes(q);
-      })
-    : all;
-
-  var autors = [];
-  all.forEach(function(e) { if (autors.indexOf(e.autor) < 0) autors.push(e.autor); });
+  var seen = (cu!=='admin' && lastSeen[cu] && lastSeen[cu][cid]) ? lastSeen[cu][cid] : '9999-99-99';
+  var all = entries.filter(function(e){ return e.centre===cid; })
+                   .sort(function(a,b){ return b.data.localeCompare(a.data); });
+  var filtered = searchTerm ? all.filter(function(e){
+    var q = searchTerm.toLowerCase();
+    var u = users[e.autor]||{};
+    return e.text.toLowerCase().includes(q) ||
+           (u.nom||'').toLowerCase().includes(q) ||
+           (u.equip||'').toLowerCase().includes(q) ||
+           (TIPOS[e.tipo]||'').toLowerCase().includes(q) ||
+           isoToDisplay(e.data).includes(q);
+  }) : all;
 
   var m = document.getElementById('main');
+  var html = '<div class="stats"><div class="stat"><div class="val">'+all.length+
+    '</div><div class="lbl">Entrades totals</div></div></div>';
+  html += '<div class="llegenda">'+
+    '<div class="leg-item"><div class="leg-dot leg-eap"></div> EAP</div>'+
+    '<div class="leg-item"><div class="leg-dot leg-crp"></div> CRP</div>'+
+    '<div class="leg-item"><div class="leg-dot leg-elic"></div> ELIC</div>'+
+    '<button class="inici-btn" onclick="goHome()">🏠 Tots els centres</button></div>';
+  html += '<div class="search-wrap"><span class="search-icon">🔍</span>'+
+    '<input type="text" id="search-input" placeholder="Cerca per paraula clau, equip, data DD-MM-AAAA..." '+
+    'value="'+escHtml(searchTerm)+'" oninput="onSearch(this.value)"></div>';
+  if (searchTerm) html += '<div class="search-count">'+filtered.length+' resultat'+
+    (filtered.length!==1?'s':'')+' per &ldquo;'+escHtml(searchTerm)+'&rdquo;</div>';
 
-  // Stats
-  var statsHtml = '<div class="stats">';
-  statsHtml += '<div class="stat"><div class="val">' + all.length + '</div><div class="lbl">Entrades totals</div></div>';
-  statsHtml += '<div class="stat"><div class="val">' + autors.length + '</div><div class="lbl">Equips amb entrades</div></div>';
-  statsHtml += '</div>';
-
-  // Llegenda equips
-  var llegendaHtml = '<div class="llegenda">';
-  llegendaHtml += '<div class="leg-item"><div class="leg-dot leg-eap"></div> EAP</div>';
-  llegendaHtml += '<div class="leg-item"><div class="leg-dot leg-crp"></div> CRP</div>';
-  llegendaHtml += '<div class="leg-item"><div class="leg-dot leg-elic"></div> ELIC</div>';
-  llegendaHtml += '</div>';
-
-  // Cercador
-  var searchHtml = '<div class="search-wrap">';
-  searchHtml += '<span class="search-icon">🔍</span>';
-  searchHtml += '<input type="text" id="search-input" placeholder="Cerca per paraula clau, equip, data..." value="' + escHtml(searchTerm) + '" oninput="onSearch(this.value)">';
-  searchHtml += '</div>';
-
-  var countHtml = searchTerm
-    ? '<div class="search-count">' + filtered.length + ' resultat' + (filtered.length !== 1 ? 's' : '') + ' per &ldquo;' + escHtml(searchTerm) + '&rdquo;</div>'
-    : '';
-
-  // Cards
-  var cardsHtml = '';
   if (filtered.length === 0) {
-    cardsHtml = '<div class="empty"><div class="empty-icon">🔍</div><div>Cap resultat per a aquesta cerca</div></div>';
+    html += '<div class="empty"><div class="empty-icon">🔍</div><div>Cap resultat per a aquesta cerca</div></div>';
   } else {
     filtered.forEach(function(e) {
-      var u = users[e.autor];
-      var isNew = cu !== 'admin' && e.autor !== cu && e.data > seen;
-      cardsHtml += '<div class="card ' + u.cc + '">';
-      cardsHtml += '<div class="card-head">';
-      cardsHtml += '<div class="avatar ' + u.avc + '">' + u.av + '</div>';
-      cardsHtml += '<div style="flex:1;">';
-      cardsHtml += '<span style="font-size:13px;font-weight:600;color:#1a1a1a;margin-right:4px;">' + u.name + '</span>';
-      cardsHtml += '<span class="tag ' + u.tc + '">' + u.team + '</span>';
-      cardsHtml += '<span class="tag t-tipo">' + TIPOS[e.tipo] + '</span>';
-      if (isNew) cardsHtml += '<span class="new-dot">NOU</span>';
-      cardsHtml += '</div></div>';
-      cardsHtml += '<div class="card-meta">' + e.data + ' &middot; ' + e.vis + '</div>';
-      cardsHtml += '<div class="card-text">' + escHtml(e.text) + '</div>';
-      cardsHtml += '</div>';
+      var u = users[e.autor]||{ nom:e.autor, equip:'' };
+      var st = EQUIP_STYLES[u.equip]||EQUIP_STYLES['Admin'];
+      var initials = (u.nom||'?').split(' ').map(function(w){ return w[0]||''; }).slice(0,2).join('').toUpperCase();
+      var isNew = cu!=='admin' && e.autor!==cu && e.data>seen;
+      html += '<div class="card '+st.cc+'">';
+      html += '<div class="card-head"><div class="avatar '+st.avc+'">'+initials+'</div>';
+      html += '<div style="flex:1;"><span style="font-size:13px;font-weight:600;color:#1a1a1a;margin-right:4px;">'+escHtml(u.nom)+'</span>';
+      html += '<span class="tag '+st.tc+'">'+escHtml(u.equip)+'</span>';
+      html += '<span class="tag t-tipo">'+(TIPOS[e.tipo]||e.tipo)+'</span>';
+      if (isNew) html += '<span class="new-dot">NOU</span>';
+      html += '</div></div>';
+      html += '<div class="card-meta">'+isoToDisplay(e.data)+' &middot; '+escHtml(e.vis)+'</div>';
+      html += '<div class="card-text">'+escHtml(e.text)+'</div></div>';
     });
   }
-
-  m.innerHTML = statsHtml + llegendaHtml + searchHtml + countHtml + cardsHtml;
-  // Mantenir el focus al cercador si s'estava cercant
+  m.innerHTML = html;
   if (searchTerm) {
     var inp = document.getElementById('search-input');
     if (inp) { inp.focus(); inp.setSelectionRange(inp.value.length, inp.value.length); }
   }
 }
-
-function onSearch(val) {
-  searchTerm = val;
-  if (cc) renderMain(cc);
-}
-
+function onSearch(val) { searchTerm = val; if (cc) renderMain(cc); }
 function escHtml(str) {
-  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  return (str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
+// ── MODAL ─────────────────────────────────────────────────────────────
 function openModal() {
   if (!cc) return;
   document.getElementById('m-data').value = new Date().toISOString().split('T')[0];
   document.getElementById('m-text').value = '';
   ctipo = 'notes';
-  document.querySelectorAll('.tbtn').forEach(function(b) { b.classList.remove('sel'); });
+  document.querySelectorAll('.tbtn').forEach(function(b){ b.classList.remove('sel'); });
   document.querySelectorAll('.tbtn')[0].classList.add('sel');
   document.getElementById('modal-bg').classList.add('show');
 }
-
-function closeModal() {
-  document.getElementById('modal-bg').classList.remove('show');
-}
-
-function bgClose(e) {
-  if (e.target === document.getElementById('modal-bg')) closeModal();
-}
-
+function closeModal() { document.getElementById('modal-bg').classList.remove('show'); }
+function bgClose(e) { if (e.target===document.getElementById('modal-bg')) closeModal(); }
 function selTipo(btn, tipo) {
   ctipo = tipo;
-  document.querySelectorAll('.tbtn').forEach(function(b) { b.classList.remove('sel'); });
+  document.querySelectorAll('.tbtn').forEach(function(b){ b.classList.remove('sel'); });
   btn.classList.add('sel');
 }
 
+// ── DESAR ─────────────────────────────────────────────────────────────
 function save() {
   var text = document.getElementById('m-text').value.trim();
-  var data = document.getElementById('m-data').value;
-  var vis  = document.getElementById('m-tipus').value;
-  if (!text || !data) { alert('Omple el text i la data!'); return; }
-  entries.push({ id:nid++, centre:cc, autor:cu, tipo:ctipo, data:data, vis:vis, text:text });
-  // Actualitzar lastSeen per a aquest usuari i centre
-  if (!lastSeen[cu]) lastSeen[cu] = {};
-  lastSeen[cu][cc] = data;
-  closeModal();
-  renderSidebar();
-  renderMain(cc);
+  var dataIso = document.getElementById('m-data').value;
+  var vis = document.getElementById('m-tipus').value;
+  if (!text || !dataIso) { alert('Omple el text i la data!'); return; }
+
+  var saveBtn = document.getElementById('save-btn');
+  saveBtn.disabled = true; saveBtn.textContent = 'Desant...';
+
+  var maxId = entries.reduce(function(m,e){ return Math.max(m, parseInt(e.id)||0); }, 0);
+  var newId = maxId + 1;
+  var dataDisplay = isoToDisplay(dataIso); // DD-MM-AAAA per al full
+
+  appendToSheet([newId, cc, cu, ctipo, dataDisplay, vis, text], function(ok) {
+    saveBtn.disabled = false; saveBtn.textContent = 'Desar entrada';
+    if (ok) {
+      entries.push({ id:String(newId), centre:cc, autor:cu, tipo:ctipo, data:dataIso, vis:vis, text:text });
+      if (!lastSeen[cu]) lastSeen[cu] = {};
+      lastSeen[cu][cc] = dataIso;
+      closeModal(); renderSidebar(); renderMain(cc);
+      showToast('Entrada desada correctament ✓');
+    } else {
+      alert('Error en desar al full de càlcul. Comprova la connexió i els permisos d\'edició.');
+    }
+  });
+}
+
+function appendToSheet(row, callback) {
+  var url = 'https://sheets.googleapis.com/v4/spreadsheets/'+SHEET_ID+
+    '/values/Entrades!A1:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS';
+  fetch(url, {
+    method: 'POST',
+    headers: { 'Authorization':'Bearer '+accessToken, 'Content-Type':'application/json' },
+    body: JSON.stringify({ values: [row] })
+  }).then(function(r){ callback(r.ok); }).catch(function(){ callback(false); });
 }
 </script>
 </body>
