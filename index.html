@@ -277,7 +277,7 @@ function startLogin() {
     scope: SCOPES,
     callback: onTokenResponse
   });
-  tokenClient.requestAccessToken({ prompt: 'select_account' });
+  tokenClient.requestAccessToken({ prompt: 'consent' });
 }
 
 function onTokenResponse(resp) {
