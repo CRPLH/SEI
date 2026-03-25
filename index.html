@@ -220,7 +220,8 @@ body{background:#f5f5f3;height:100vh;display:flex;flex-direction:column;overflow
 var CLIENT_ID   = '35717844423-5kmvsuhks3876m1rmh20mctlntsl4cfo.apps.googleusercontent.com';
 var API_KEY     = 'AIzaSyD_1MAkw-DwbKTBkTNXfJTXPvdNja5fWLI';
 var SHEET_ID    = '1Kc8f7kH_2hX4nvLU_E0kRtS_aLeEDfx3ZfMOga89c3k';
-var SCOPES      = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile';
+var SCOPES          = 'https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile';
+var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby5l_ZVd3I2dRrthbF6MVx15trgOc-Rrx022SYrb-LVQDQ3TyOhuECMnmB9jjMruWQ/exec';
 var ADMIN_EMAIL = 'a8930005@xtec.cat';
 
 var EQUIP_STYLES = {
@@ -548,26 +549,17 @@ function save() {
 }
 
 function appendToSheet(row, callback) {
-  var url = 'https://sheets.googleapis.com/v4/spreadsheets/'+SHEET_ID+
-    '/values/Entrades!A1:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS';
-  fetch(url, {
+  fetch(APPS_SCRIPT_URL, {
     method: 'POST',
-    headers: { 'Authorization':'Bearer '+accessToken, 'Content-Type':'application/json' },
-    body: JSON.stringify({ values: [row] })
-  }).then(function(r){
-    if (r.ok) { callback(true); return; }
-    r.json().then(function(errData){
-      var msg = (errData && errData.error && errData.error.message) ? errData.error.message : JSON.stringify(errData);
-      var status = r.status;
-      console.error('Sheets API error', status, msg);
-      // Mostra l'error exacte a l'usuari per facilitar el diagnòstic
-      var detall = 'Error ' + status + ': ' + msg;
-      alert('No s\'ha pogut desar.\n\n' + detall + '\n\nCopia aquest missatge i comunica\'l al desenvolupador.');
-      callback(false);
-    }).catch(function(){ callback(false); });
-  }).catch(function(err){
-    console.error('Fetch error:', err);
-    alert('Error de xarxa en contactar amb Google Sheets:\n' + err.message);
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'text/plain' },
+    body: JSON.stringify({ row: row })
+  }).then(function() {
+    // no-cors no permet llegir la resposta, però si no llança error és que ha arribat
+    callback(true);
+  }).catch(function(err) {
+    console.error('Apps Script error:', err);
+    alert('Error de xarxa en contactar amb el servidor:\n' + err.message);
     callback(false);
   });
 }
