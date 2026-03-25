@@ -125,7 +125,14 @@ body{background:#f5f5f3;height:100vh;display:flex;flex-direction:column;overflow
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1a1a1a;color:#fff;border-radius:8px;padding:10px 18px;font-size:13px;z-index:200;opacity:0;transition:opacity .3s;pointer-events:none;}
 .toast.show{opacity:1;}
 
-/* Botons d'acció a les targetes */
+/* Topbar badge entrades noves */
+.topbar-badge{display:none;align-items:center;gap:6px;background:#fef2f2;border:1px solid #fca5a5;border-radius:20px;padding:4px 10px;font-size:12px;color:#b91c1c;font-weight:600;cursor:pointer;transition:background .15s;}
+.topbar-badge:hover{background:#fee2e2;}
+.topbar-badge.show{display:flex;}
+.topbar-badge-dot{width:8px;height:8px;background:#e24b4a;border-radius:50%;flex-shrink:0;animation:pulse 1.5s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.4;}}
+.polling-dot{width:7px;height:7px;border-radius:50%;background:#ccc;flex-shrink:0;margin-left:6px;title:'Sincronitzant...';}
+.polling-dot.syncing{background:#3c3489;animation:pulse .8s infinite;}
 .card-actions{display:flex;gap:6px;margin-top:10px;padding-top:8px;border-top:1px solid rgba(0,0,0,.06);}
 .card-act-btn{cursor:pointer;border:1px solid #ddd;background:#fff;border-radius:6px;padding:4px 10px;font-size:11px;color:#555;font-family:inherit;}
 .card-act-btn:hover{background:#f0effe;border-color:#7f77dd;color:#3c3489;}
@@ -166,7 +173,14 @@ body{background:#f5f5f3;height:100vh;display:flex;flex-direction:column;overflow
       <span id="top-nom">AssessorApp</span>
       <span id="top-tipus"></span>
     </div>
-    <button class="nova-btn" id="nova-btn" style="display:none;" onclick="openModal()">+ Nova entrada</button>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div class="topbar-badge" id="topbar-badge" onclick="onBadgeClick()">
+        <div class="topbar-badge-dot"></div>
+        <span id="topbar-badge-txt"></span>
+      </div>
+      <button class="nova-btn" id="nova-btn" style="display:none;" onclick="openModal()">+ Nova entrada</button>
+      <div class="polling-dot" id="polling-dot" title="Sincronitzant..."></div>
+    </div>
   </div>
   <div class="layout">
     <div class="sidebar">
@@ -263,7 +277,10 @@ var TIPOS = { notes:'Notes / observacions', plans:"Pla d'actuació", seguiment:"
 var cu = null, cc = null, ctipo = 'notes', searchTerm = '';
 var users = {}, centres = {}, entries = [], lastSeen = {};
 var accessToken = null, tokenClient = null;
-var editingId = null; // id de l'entrada que s'està editant (null = nova entrada)
+var editingId = null;
+var pollingTimer = null;
+var sessionSeenAt = null;   // moment d'inici de sessió (ISO), per calcular entrades noves
+var POLL_INTERVAL = 5 * 60 * 1000; // 5 minuts
 
 // ── FORMAT DATES ──────────────────────────────────────────────────────
 function isoToDisplay(iso) {
@@ -400,6 +417,7 @@ function doLogin(email, nom, foto) {
   }
 
   cu = uid;
+  sessionSeenAt = new Date().toISOString().split('T')[0]; // data d'inici de sessió
   var u = users[uid];
   document.getElementById('app').style.display = 'flex';
   document.getElementById('login').style.display = 'none';
@@ -411,6 +429,8 @@ function doLogin(email, nom, foto) {
   }
   renderSidebar();
   showMainEmpty();
+  updateTopbarBadge();
+  startPolling();
 }
 
 function showError(msg) {
@@ -431,7 +451,8 @@ function showMainEmpty() {
 }
 
 function logout() {
-  cu = null; cc = null; searchTerm = ''; accessToken = null; lastSeen = {};
+  stopPolling();
+  cu = null; cc = null; searchTerm = ''; accessToken = null; lastSeen = {}; sessionSeenAt = null;
   if (typeof google !== 'undefined') google.accounts.id.disableAutoSelect();
   document.getElementById('app').style.display = 'none';
   document.getElementById('login').style.display = 'flex';
@@ -440,6 +461,7 @@ function logout() {
   document.getElementById('top-nom').textContent = 'AssessorApp';
   document.getElementById('top-tipus').textContent = '';
   document.getElementById('nova-btn').style.display = 'none';
+  document.getElementById('topbar-badge').classList.remove('show');
 }
 
 // ── SIDEBAR ───────────────────────────────────────────────────────────
@@ -675,7 +697,76 @@ function doDelete(id) {
   });
 }
 
-// ── APPS SCRIPT ───────────────────────────────────────────────────────
+// ── POLLING ───────────────────────────────────────────────────────────
+function startPolling() {
+  stopPolling();
+  pollingTimer = setInterval(pollEntrades, POLL_INTERVAL);
+}
+function stopPolling() {
+  if (pollingTimer) { clearInterval(pollingTimer); pollingTimer = null; }
+}
+
+function pollEntrades() {
+  if (!cu || !accessToken) return;
+  var dot = document.getElementById('polling-dot');
+  dot.classList.add('syncing');
+  var base = 'https://sheets.googleapis.com/v4/spreadsheets/' + SHEET_ID + '/values/';
+  fetch(base + 'Entrades', { headers: { Authorization: 'Bearer ' + accessToken } })
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      dot.classList.remove('syncing');
+      var oldIds = entries.map(function(e){ return String(e.id); });
+      parseEntrades(data);
+      // Detecta si hi ha entrades noves d'altri
+      var hasNew = entries.some(function(e){
+        return !oldIds.includes(String(e.id)) && e.autor !== cu;
+      });
+      renderSidebar();
+      if (cc) renderMain(cc);
+      updateTopbarBadge();
+      if (hasNew) showToast('Hi ha entrades noves als teus centres 🔔', 4000);
+    })
+    .catch(function(){ dot.classList.remove('syncing'); });
+}
+
+// ── TOPBAR BADGE ──────────────────────────────────────────────────────
+function countAllNew() {
+  if (!cu || cu === 'admin' || !sessionSeenAt) return 0;
+  var u = users[cu]; if (!u) return 0;
+  return entries.filter(function(e){
+    return u.centres.includes(e.centre) &&
+           e.autor !== cu &&
+           e.data >= sessionSeenAt;
+  }).length;
+}
+
+function updateTopbarBadge() {
+  if (!cu || cu === 'admin') return;
+  var n = countAllNew();
+  var badge = document.getElementById('topbar-badge');
+  var txt   = document.getElementById('topbar-badge-txt');
+  if (n > 0) {
+    txt.textContent = n + (n === 1 ? ' entrada nova' : ' entrades noves');
+    badge.classList.add('show');
+  } else {
+    badge.classList.remove('show');
+  }
+}
+
+function onBadgeClick() {
+  // Mostra un resum de quins centres tenen entrades noves
+  if (!cu || cu === 'admin') return;
+  var u = users[cu];
+  var lines = [];
+  u.centres.forEach(function(cid){
+    var c = centres[cid]; if (!c) return;
+    var n = entries.filter(function(e){
+      return e.centre === cid && e.autor !== cu && e.data >= sessionSeenAt;
+    }).length;
+    if (n > 0) lines.push('• ' + c.nom + ': ' + n + (n===1?' entrada nova':' entrades noves'));
+  });
+  if (lines.length) showToast(lines.join('  ·  '), 5000);
+}
 function callScript(payload, callback) {
   fetch(APPS_SCRIPT_URL, {
     method: 'POST',
