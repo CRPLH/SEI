@@ -133,20 +133,6 @@ body{background:#f5f5f3;height:100vh;display:flex;flex-direction:column;overflow
 @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.4;}}
 .polling-dot{width:7px;height:7px;border-radius:50%;background:#ccc;flex-shrink:0;margin-left:6px;title:'Sincronitzant...';}
 .polling-dot.syncing{background:#3c3489;animation:pulse .8s infinite;}
-.card-actions{display:flex;gap:6px;margin-top:10px;padding-top:8px;border-top:1px solid rgba(0,0,0,.06);}
-.card-act-btn{cursor:pointer;border:1px solid #ddd;background:#fff;border-radius:6px;padding:4px 10px;font-size:11px;color:#555;font-family:inherit;}
-.card-act-btn:hover{background:#f0effe;border-color:#7f77dd;color:#3c3489;}
-.card-act-btn.del:hover{background:#fef2f2;border-color:#f09595;color:#a32d2d;}
-.card-edited{font-size:11px;color:#aaa;font-style:italic;margin-top:6px;}
-
-/* Confirm overlay */
-.confirm-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:150;align-items:center;justify-content:center;}
-.confirm-bg.show{display:flex;}
-.confirm-box{background:#fff;border-radius:12px;padding:22px;width:320px;max-width:90vw;box-shadow:0 8px 40px rgba(0,0,0,.18);}
-.confirm-box p{font-size:14px;color:#333;margin-bottom:16px;line-height:1.5;}
-.confirm-actions{display:flex;gap:8px;justify-content:flex-end;}
-.btn-danger{cursor:pointer;border:none;background:#dc2626;color:#fff;border-radius:8px;padding:8px 14px;font-size:13px;font-family:inherit;}
-.btn-danger:hover{background:#b91c1c;}
 </style>
 </head>
 <body>
@@ -241,15 +227,6 @@ body{background:#f5f5f3;height:100vh;display:flex;flex-direction:column;overflow
 
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
-
-<!-- CONFIRM ESBORRAR -->
-<div class="confirm-bg" id="confirm-bg">
-  <div class="confirm-box">
-    <p id="confirm-msg">Segur que vols esborrar aquesta entrada? Aquesta acció no es pot desfer.</p>
-    <div class="confirm-actions">
-      <button class="btn-sec" onclick="closeConfirm()">Cancel·lar</button>
-      <button class="btn-danger" id="confirm-ok">Esborrar</button>
-    </div>
   </div>
 </div>
 
@@ -277,7 +254,6 @@ var TIPOS = { notes:'Notes / observacions', plans:"Pla d'actuació", seguiment:"
 var cu = null, cc = null, ctipo = 'notes', searchTerm = '';
 var users = {}, centres = {}, entries = [], lastSeen = {};
 var accessToken = null, tokenClient = null;
-var editingId = null;
 var pollingTimer = null;
 var sessionSeenAt = null;   // moment d'inici de sessió (ISO), per calcular entrades noves
 var POLL_INTERVAL = 5 * 60 * 1000; // 5 minuts
@@ -544,7 +520,6 @@ function renderMain(cid) {
       var st = EQUIP_STYLES[u.equip]||EQUIP_STYLES['Admin'];
       var initials = (u.nom||'?').split(' ').map(function(w){ return w[0]||''; }).slice(0,2).join('').toUpperCase();
       var isNew = cu!=='admin' && e.autor!==cu && e.data>seen;
-      var canEdit = (e.autor === cu) || (cu === 'admin');
       html += '<div class="card '+st.cc+'">';
       html += '<div class="card-head"><div class="avatar '+st.avc+'">'+initials+'</div>';
       html += '<div style="flex:1;"><span style="font-size:13px;font-weight:600;color:#1a1a1a;margin-right:4px;">'+escHtml(u.nom)+'</span>';
@@ -554,17 +529,6 @@ function renderMain(cid) {
       html += '</div></div>';
       html += '<div class="card-meta">'+isoToDisplay(e.data)+' &middot; '+escHtml(e.vis)+'</div>';
       html += '<div class="card-text">'+escHtml(e.text)+'</div>';
-      if (e.editedAt) {
-        html += '<div class="card-edited">✎ Editat el '+isoToDisplay(e.editedAt)+'</div>';
-      }
-      if (canEdit) {
-        html += '<div class="card-actions">';
-        if (e.autor === cu) {
-          html += '<button class="card-act-btn" onclick="openEditModal(\''+e.id+'\')">✎ Editar</button>';
-        }
-        html += '<button class="card-act-btn del" onclick="confirmDelete(\''+e.id+'\')">✕ Esborrar</button>';
-        html += '</div>';
-      }
       html += '</div>';
     });
   }
@@ -582,35 +546,11 @@ function escHtml(str) {
 // ── MODAL ─────────────────────────────────────────────────────────────
 function openModal() {
   if (!cc) return;
-  editingId = null;
-  document.querySelector('#modal-bg h3').textContent = 'Nova entrada';
-  document.getElementById('save-btn').textContent = 'Desar entrada';
   document.getElementById('m-data').value = new Date().toISOString().split('T')[0];
   document.getElementById('m-text').value = '';
   ctipo = 'notes';
   document.querySelectorAll('.tbtn').forEach(function(b){ b.classList.remove('sel'); });
   document.querySelectorAll('.tbtn')[0].classList.add('sel');
-  document.getElementById('modal-bg').classList.add('show');
-}
-
-function openEditModal(id) {
-  var e = entries.find(function(x){ return String(x.id)===String(id); });
-  if (!e) return;
-  editingId = id;
-  document.querySelector('#modal-bg h3').textContent = 'Editar entrada';
-  document.getElementById('save-btn').textContent = 'Desar canvis';
-  document.getElementById('m-data').value = e.data; // ISO per a l'input
-  document.getElementById('m-text').value = e.text;
-  ctipo = e.tipo;
-  document.querySelectorAll('.tbtn').forEach(function(b){ b.classList.remove('sel'); });
-  document.querySelectorAll('.tbtn').forEach(function(b){
-    if (b.getAttribute('onclick') && b.getAttribute('onclick').includes("'"+e.tipo+"'")) b.classList.add('sel');
-  });
-  // Selecciona el tipus de visita
-  var sel = document.getElementById('m-tipus');
-  for (var i = 0; i < sel.options.length; i++) {
-    if (sel.options[i].value === e.vis || sel.options[i].text === e.vis) sel.selectedIndex = i;
-  }
   document.getElementById('modal-bg').classList.add('show');
 }
 
@@ -622,7 +562,7 @@ function selTipo(btn, tipo) {
   btn.classList.add('sel');
 }
 
-// ── DESAR (nova o edició) ─────────────────────────────────────────────
+// ── DESAR ─────────────────────────────────────────────────────────────
 function save() {
   var text = document.getElementById('m-text').value.trim();
   var dataIso = document.getElementById('m-data').value;
@@ -632,67 +572,19 @@ function save() {
   var saveBtn = document.getElementById('save-btn');
   saveBtn.disabled = true; saveBtn.textContent = 'Desant...';
 
-  if (editingId) {
-    // EDICIÓ
-    var todayDisplay = isoToDisplay(new Date().toISOString().split('T')[0]);
-    var dataDisplay = isoToDisplay(dataIso);
-    var e = entries.find(function(x){ return String(x.id)===String(editingId); });
-    if (!e) { saveBtn.disabled=false; return; }
-    var row = [e.id, e.centre, e.autor, ctipo, dataDisplay, vis, text, todayDisplay];
-    callScript({ action:'update', id:e.id, row:row }, function(ok) {
-      saveBtn.disabled = false; saveBtn.textContent = 'Desar canvis';
-      if (ok) {
-        e.tipo = ctipo; e.data = dataIso; e.vis = vis; e.text = text;
-        e.editedAt = new Date().toISOString().split('T')[0];
-        closeModal(); renderMain(cc);
-        showToast('Entrada actualitzada ✓');
-      } else {
-        alert('Error en desar els canvis. Comprova la connexió.');
-      }
-    });
-  } else {
-    // NOVA ENTRADA
-    var maxId = entries.reduce(function(m,e){ return Math.max(m, parseInt(e.id)||0); }, 0);
-    var newId = maxId + 1;
-    var dataDisplay = isoToDisplay(dataIso);
-    callScript({ action:'append', row:[newId, cc, cu, ctipo, dataDisplay, vis, text, ''] }, function(ok) {
-      saveBtn.disabled = false; saveBtn.textContent = 'Desar entrada';
-      if (ok) {
-        entries.push({ id:String(newId), centre:cc, autor:cu, tipo:ctipo, data:dataIso, vis:vis, text:text, editedAt:'' });
-        if (!lastSeen[cu]) lastSeen[cu] = {};
-        lastSeen[cu][cc] = dataIso;
-        closeModal(); renderSidebar(); renderMain(cc);
-        showToast('Entrada desada correctament ✓');
-      } else {
-        alert('Error en desar al full de càlcul. Comprova la connexió i els permisos d\'edició.');
-      }
-    });
-  }
-}
-
-// ── ESBORRAR ──────────────────────────────────────────────────────────
-var pendingDeleteId = null;
-function confirmDelete(id) {
-  pendingDeleteId = id;
-  document.getElementById('confirm-bg').classList.add('show');
-  document.getElementById('confirm-ok').onclick = function() {
-    var idToDelete = pendingDeleteId;
-    closeConfirm();
-    doDelete(idToDelete);
-  };
-}
-function closeConfirm() {
-  document.getElementById('confirm-bg').classList.remove('show');
-  pendingDeleteId = null;
-}
-function doDelete(id) {
-  callScript({ action:'delete', id:id }, function(ok) {
+  var maxId = entries.reduce(function(m,e){ return Math.max(m, parseInt(e.id)||0); }, 0);
+  var newId = maxId + 1;
+  var dataDisplay = isoToDisplay(dataIso);
+  callScript({ action:'append', row:[newId, cc, cu, ctipo, dataDisplay, vis, text] }, function(ok) {
+    saveBtn.disabled = false; saveBtn.textContent = 'Desar entrada';
     if (ok) {
-      entries = entries.filter(function(e){ return String(e.id)!==String(id); });
-      renderSidebar(); renderMain(cc);
-      showToast('Entrada esborrada ✓');
+      entries.push({ id:String(newId), centre:cc, autor:cu, tipo:ctipo, data:dataIso, vis:vis, text:text });
+      if (!lastSeen[cu]) lastSeen[cu] = {};
+      lastSeen[cu][cc] = dataIso;
+      closeModal(); renderSidebar(); renderMain(cc);
+      showToast('Entrada desada correctament ✓');
     } else {
-      alert('Error en esborrar l\'entrada. Comprova la connexió.');
+      alert('Error en desar al full de càlcul. Comprova la connexió i els permisos d\'edició.');
     }
   });
 }
@@ -794,22 +686,14 @@ function verifyOperation(payload, callback) {
       for (var i = 1; i < rows.length; i++) {
         if (rows[i][0]) sheetIds.push(String(rows[i][0]).trim());
       }
-      var ok = false;
-      if (payload.action === 'append') {
-        ok = sheetIds.includes(String(payload.row[0]));
-      } else if (payload.action === 'delete') {
-        ok = !sheetIds.includes(String(payload.id));
-      } else if (payload.action === 'update') {
-        ok = sheetIds.includes(String(payload.id));
-      }
-      // Sincronitza la memòria amb l'estat real del full
+      var ok = sheetIds.includes(String(payload.row[0]));
       parseEntrades(data);
       renderSidebar();
       if (cc) renderMain(cc);
       updateTopbarBadge();
       callback(ok);
     })
-    .catch(function() { callback(true); }); // si no es pot verificar, assumim ok
+    .catch(function() { callback(true); });
 }
 </script>
 </body>
