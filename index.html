@@ -768,17 +768,48 @@ function onBadgeClick() {
   if (lines.length) showToast(lines.join('  ·  '), 5000);
 }
 function callScript(payload, callback) {
+  // no-cors: Apps Script no permet capçaleres CORS, no podem llegir la resposta.
+  // Solució: després d'enviar, llegim el full directament per verificar que l'operació ha funcionat.
   fetch(APPS_SCRIPT_URL, {
     method: 'POST',
     mode: 'no-cors',
     headers: { 'Content-Type': 'text/plain' },
     body: JSON.stringify(payload)
   }).then(function() {
-    callback(true);
+    // Esperem 2s per donar temps a Apps Script d'escriure al full
+    setTimeout(function() { verifyOperation(payload, callback); }, 2000);
   }).catch(function(err) {
-    console.error('Apps Script error:', err);
+    console.error('Apps Script fetch error:', err);
     callback(false);
   });
+}
+
+function verifyOperation(payload, callback) {
+  var base = 'https://sheets.googleapis.com/v4/spreadsheets/' + SHEET_ID + '/values/Entrades';
+  fetch(base, { headers: { Authorization: 'Bearer ' + accessToken } })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      var rows = data.values || [];
+      var sheetIds = [];
+      for (var i = 1; i < rows.length; i++) {
+        if (rows[i][0]) sheetIds.push(String(rows[i][0]).trim());
+      }
+      var ok = false;
+      if (payload.action === 'append') {
+        ok = sheetIds.includes(String(payload.row[0]));
+      } else if (payload.action === 'delete') {
+        ok = !sheetIds.includes(String(payload.id));
+      } else if (payload.action === 'update') {
+        ok = sheetIds.includes(String(payload.id));
+      }
+      // Sincronitza la memòria amb l'estat real del full
+      parseEntrades(data);
+      renderSidebar();
+      if (cc) renderMain(cc);
+      updateTopbarBadge();
+      callback(ok);
+    })
+    .catch(function() { callback(true); }); // si no es pot verificar, assumim ok
 }
 </script>
 </body>
