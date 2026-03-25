@@ -393,7 +393,12 @@ function doLogin(email, nom, foto) {
   }
 
   cu = uid;
-  sessionSeenAt = new Date().toISOString().split('T')[0]; // data d'inici de sessió
+  sessionSeenAt = new Date().toISOString().split('T')[0];
+  // Recupera lastSeen persistent de localStorage
+  try {
+    var stored = localStorage.getItem('assesApp_lastSeen_' + uid);
+    lastSeen[uid] = stored ? JSON.parse(stored) : {};
+  } catch(e) { lastSeen[uid] = {}; }
   var u = users[uid];
   document.getElementById('app').style.display = 'flex';
   document.getElementById('login').style.display = 'none';
@@ -471,6 +476,7 @@ function selCentre(cid) {
   if (cu !== 'admin') {
     if (!lastSeen[cu]) lastSeen[cu] = {};
     lastSeen[cu][cid] = new Date().toISOString().split('T')[0];
+    try { localStorage.setItem('assesApp_lastSeen_' + cu, JSON.stringify(lastSeen[cu])); } catch(e) {}
   }
   renderMain(cid);
 }
@@ -581,6 +587,7 @@ function save() {
       entries.push({ id:String(newId), centre:cc, autor:cu, tipo:ctipo, data:dataIso, vis:vis, text:text });
       if (!lastSeen[cu]) lastSeen[cu] = {};
       lastSeen[cu][cc] = dataIso;
+      try { localStorage.setItem('assesApp_lastSeen_' + cu, JSON.stringify(lastSeen[cu])); } catch(e) {}
       closeModal(); renderSidebar(); renderMain(cc);
       showToast('Entrada desada correctament ✓');
     } else {
