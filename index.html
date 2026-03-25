@@ -247,7 +247,7 @@ body{background:#f5f5f3;height:100vh;display:flex;flex-direction:column;overflow
 var CLIENT_ID   = '35717844423-5kmvsuhks3876m1rmh20mctlntsl4cfo.apps.googleusercontent.com';
 var API_KEY     = 'AIzaSyD_1MAkw-DwbKTBkTNXfJTXPvdNja5fWLI';
 var SHEET_ID    = '1Kc8f7kH_2hX4nvLU_E0kRtS_aLeEDfx3ZfMOga89c3k';
-var SCOPES          = 'https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile';
+var SCOPES          = 'https://www.googleapis.com/auth/spreadsheets.readonly https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile';
 var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby5l_ZVd3I2dRrthbF6MVx15trgOc-Rrx022SYrb-LVQDQ3TyOhuECMnmB9jjMruWQ/exec';
 var ADMIN_EMAIL = 'a8930005@xtec.cat';
 
@@ -372,6 +372,8 @@ function parseEntrades(data) {
 function doLogin(email, nom, foto) {
   var emailLow = (email||'').toLowerCase();
   var uid = null;
+
+  // Superusuari: prioritat absoluta per email, independentment del full Usuaris
   if (emailLow === ADMIN_EMAIL) {
     uid = 'admin';
     users['admin'] = { id:'admin', nom:nom||'Superusuari', equip:'Admin',
@@ -381,12 +383,22 @@ function doLogin(email, nom, foto) {
       if (users[k].email === emailLow) uid = k;
     });
   }
+
   if (!uid) {
     showError('Accés no autoritzat. El correu ' + email + ' no està registrat a l\'aplicació.');
     document.getElementById('login').style.display = 'flex';
     document.getElementById('app').style.display = 'none';
     return;
   }
+
+  // Verificació addicional: si admin no té centres (full Centres buit o mal carregat)
+  if (uid === 'admin' && users['admin'].centres.length === 0) {
+    showError('No s\'han pogut carregar els centres. Comprova que el full "Centres" té dades i és accessible.');
+    document.getElementById('login').style.display = 'flex';
+    document.getElementById('app').style.display = 'none';
+    return;
+  }
+
   cu = uid;
   var u = users[uid];
   document.getElementById('app').style.display = 'flex';
@@ -642,8 +654,9 @@ function confirmDelete(id) {
   pendingDeleteId = id;
   document.getElementById('confirm-bg').classList.add('show');
   document.getElementById('confirm-ok').onclick = function() {
+    var idToDelete = pendingDeleteId;
     closeConfirm();
-    doDelete(pendingDeleteId);
+    doDelete(idToDelete);
   };
 }
 function closeConfirm() {
