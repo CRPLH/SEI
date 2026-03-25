@@ -124,6 +124,22 @@ body{background:#f5f5f3;height:100vh;display:flex;flex-direction:column;overflow
 @keyframes spin{to{transform:rotate(360deg);}}
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1a1a1a;color:#fff;border-radius:8px;padding:10px 18px;font-size:13px;z-index:200;opacity:0;transition:opacity .3s;pointer-events:none;}
 .toast.show{opacity:1;}
+
+/* Botons d'acció a les targetes */
+.card-actions{display:flex;gap:6px;margin-top:10px;padding-top:8px;border-top:1px solid rgba(0,0,0,.06);}
+.card-act-btn{cursor:pointer;border:1px solid #ddd;background:#fff;border-radius:6px;padding:4px 10px;font-size:11px;color:#555;font-family:inherit;}
+.card-act-btn:hover{background:#f0effe;border-color:#7f77dd;color:#3c3489;}
+.card-act-btn.del:hover{background:#fef2f2;border-color:#f09595;color:#a32d2d;}
+.card-edited{font-size:11px;color:#aaa;font-style:italic;margin-top:6px;}
+
+/* Confirm overlay */
+.confirm-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:150;align-items:center;justify-content:center;}
+.confirm-bg.show{display:flex;}
+.confirm-box{background:#fff;border-radius:12px;padding:22px;width:320px;max-width:90vw;box-shadow:0 8px 40px rgba(0,0,0,.18);}
+.confirm-box p{font-size:14px;color:#333;margin-bottom:16px;line-height:1.5;}
+.confirm-actions{display:flex;gap:8px;justify-content:flex-end;}
+.btn-danger{cursor:pointer;border:none;background:#dc2626;color:#fff;border-radius:8px;padding:8px 14px;font-size:13px;font-family:inherit;}
+.btn-danger:hover{background:#b91c1c;}
 </style>
 </head>
 <body>
@@ -212,6 +228,17 @@ body{background:#f5f5f3;height:100vh;display:flex;flex-direction:column;overflow
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
 
+<!-- CONFIRM ESBORRAR -->
+<div class="confirm-bg" id="confirm-bg">
+  <div class="confirm-box">
+    <p id="confirm-msg">Segur que vols esborrar aquesta entrada? Aquesta acció no es pot desfer.</p>
+    <div class="confirm-actions">
+      <button class="btn-sec" onclick="closeConfirm()">Cancel·lar</button>
+      <button class="btn-danger" id="confirm-ok">Esborrar</button>
+    </div>
+  </div>
+</div>
+
 <!-- Google Identity Services -->
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 
@@ -236,6 +263,7 @@ var TIPOS = { notes:'Notes / observacions', plans:"Pla d'actuació", seguiment:"
 var cu = null, cc = null, ctipo = 'notes', searchTerm = '';
 var users = {}, centres = {}, entries = [], lastSeen = {};
 var accessToken = null, tokenClient = null;
+var editingId = null; // id de l'entrada que s'està editant (null = nova entrada)
 
 // ── FORMAT DATES ──────────────────────────────────────────────────────
 function isoToDisplay(iso) {
@@ -331,11 +359,13 @@ function parseEntrades(data) {
   var rows = data.values || [];
   for (var i = 1; i < rows.length; i++) {
     var r = rows[i]; if (!r[0]) continue;
-    // data al full: DD-MM-AAAA → convertim a ISO per ordenar internament
     var dataRaw = r[4] || '';
     var dataIso = dataRaw.match(/^\d{2}-\d{2}-\d{4}$/) ? displayToIso(dataRaw) : dataRaw;
+    // columna 7 (índex 7): data d'edició DD-MM-AAAA (opcional)
+    var editedRaw = r[7] || '';
+    var editedIso = editedRaw.match(/^\d{2}-\d{2}-\d{4}$/) ? displayToIso(editedRaw) : editedRaw;
     entries.push({ id:r[0], centre:r[1]||'', autor:r[2]||'', tipo:r[3]||'notes',
-      data:dataIso, vis:r[5]||'', text:r[6]||'' });
+      data:dataIso, vis:r[5]||'', text:r[6]||'', editedAt:editedIso||'' });
   }
 }
 
@@ -480,6 +510,7 @@ function renderMain(cid) {
       var st = EQUIP_STYLES[u.equip]||EQUIP_STYLES['Admin'];
       var initials = (u.nom||'?').split(' ').map(function(w){ return w[0]||''; }).slice(0,2).join('').toUpperCase();
       var isNew = cu!=='admin' && e.autor!==cu && e.data>seen;
+      var canEdit = (e.autor === cu) || (cu === 'admin');
       html += '<div class="card '+st.cc+'">';
       html += '<div class="card-head"><div class="avatar '+st.avc+'">'+initials+'</div>';
       html += '<div style="flex:1;"><span style="font-size:13px;font-weight:600;color:#1a1a1a;margin-right:4px;">'+escHtml(u.nom)+'</span>';
@@ -488,7 +519,19 @@ function renderMain(cid) {
       if (isNew) html += '<span class="new-dot">NOU</span>';
       html += '</div></div>';
       html += '<div class="card-meta">'+isoToDisplay(e.data)+' &middot; '+escHtml(e.vis)+'</div>';
-      html += '<div class="card-text">'+escHtml(e.text)+'</div></div>';
+      html += '<div class="card-text">'+escHtml(e.text)+'</div>';
+      if (e.editedAt) {
+        html += '<div class="card-edited">✎ Editat el '+isoToDisplay(e.editedAt)+'</div>';
+      }
+      if (canEdit) {
+        html += '<div class="card-actions">';
+        if (e.autor === cu) {
+          html += '<button class="card-act-btn" onclick="openEditModal(\''+e.id+'\')">✎ Editar</button>';
+        }
+        html += '<button class="card-act-btn del" onclick="confirmDelete(\''+e.id+'\')">✕ Esborrar</button>';
+        html += '</div>';
+      }
+      html += '</div>';
     });
   }
   m.innerHTML = html;
@@ -505,6 +548,9 @@ function escHtml(str) {
 // ── MODAL ─────────────────────────────────────────────────────────────
 function openModal() {
   if (!cc) return;
+  editingId = null;
+  document.querySelector('#modal-bg h3').textContent = 'Nova entrada';
+  document.getElementById('save-btn').textContent = 'Desar entrada';
   document.getElementById('m-data').value = new Date().toISOString().split('T')[0];
   document.getElementById('m-text').value = '';
   ctipo = 'notes';
@@ -512,6 +558,28 @@ function openModal() {
   document.querySelectorAll('.tbtn')[0].classList.add('sel');
   document.getElementById('modal-bg').classList.add('show');
 }
+
+function openEditModal(id) {
+  var e = entries.find(function(x){ return String(x.id)===String(id); });
+  if (!e) return;
+  editingId = id;
+  document.querySelector('#modal-bg h3').textContent = 'Editar entrada';
+  document.getElementById('save-btn').textContent = 'Desar canvis';
+  document.getElementById('m-data').value = e.data; // ISO per a l'input
+  document.getElementById('m-text').value = e.text;
+  ctipo = e.tipo;
+  document.querySelectorAll('.tbtn').forEach(function(b){ b.classList.remove('sel'); });
+  document.querySelectorAll('.tbtn').forEach(function(b){
+    if (b.getAttribute('onclick') && b.getAttribute('onclick').includes("'"+e.tipo+"'")) b.classList.add('sel');
+  });
+  // Selecciona el tipus de visita
+  var sel = document.getElementById('m-tipus');
+  for (var i = 0; i < sel.options.length; i++) {
+    if (sel.options[i].value === e.vis || sel.options[i].text === e.vis) sel.selectedIndex = i;
+  }
+  document.getElementById('modal-bg').classList.add('show');
+}
+
 function closeModal() { document.getElementById('modal-bg').classList.remove('show'); }
 function bgClose(e) { if (e.target===document.getElementById('modal-bg')) closeModal(); }
 function selTipo(btn, tipo) {
@@ -520,7 +588,7 @@ function selTipo(btn, tipo) {
   btn.classList.add('sel');
 }
 
-// ── DESAR ─────────────────────────────────────────────────────────────
+// ── DESAR (nova o edició) ─────────────────────────────────────────────
 function save() {
   var text = document.getElementById('m-text').value.trim();
   var dataIso = document.getElementById('m-data').value;
@@ -530,36 +598,81 @@ function save() {
   var saveBtn = document.getElementById('save-btn');
   saveBtn.disabled = true; saveBtn.textContent = 'Desant...';
 
-  var maxId = entries.reduce(function(m,e){ return Math.max(m, parseInt(e.id)||0); }, 0);
-  var newId = maxId + 1;
-  var dataDisplay = isoToDisplay(dataIso); // DD-MM-AAAA per al full
+  if (editingId) {
+    // EDICIÓ
+    var todayDisplay = isoToDisplay(new Date().toISOString().split('T')[0]);
+    var dataDisplay = isoToDisplay(dataIso);
+    var e = entries.find(function(x){ return String(x.id)===String(editingId); });
+    if (!e) { saveBtn.disabled=false; return; }
+    var row = [e.id, e.centre, e.autor, ctipo, dataDisplay, vis, text, todayDisplay];
+    callScript({ action:'update', id:e.id, row:row }, function(ok) {
+      saveBtn.disabled = false; saveBtn.textContent = 'Desar canvis';
+      if (ok) {
+        e.tipo = ctipo; e.data = dataIso; e.vis = vis; e.text = text;
+        e.editedAt = new Date().toISOString().split('T')[0];
+        closeModal(); renderMain(cc);
+        showToast('Entrada actualitzada ✓');
+      } else {
+        alert('Error en desar els canvis. Comprova la connexió.');
+      }
+    });
+  } else {
+    // NOVA ENTRADA
+    var maxId = entries.reduce(function(m,e){ return Math.max(m, parseInt(e.id)||0); }, 0);
+    var newId = maxId + 1;
+    var dataDisplay = isoToDisplay(dataIso);
+    callScript({ action:'append', row:[newId, cc, cu, ctipo, dataDisplay, vis, text, ''] }, function(ok) {
+      saveBtn.disabled = false; saveBtn.textContent = 'Desar entrada';
+      if (ok) {
+        entries.push({ id:String(newId), centre:cc, autor:cu, tipo:ctipo, data:dataIso, vis:vis, text:text, editedAt:'' });
+        if (!lastSeen[cu]) lastSeen[cu] = {};
+        lastSeen[cu][cc] = dataIso;
+        closeModal(); renderSidebar(); renderMain(cc);
+        showToast('Entrada desada correctament ✓');
+      } else {
+        alert('Error en desar al full de càlcul. Comprova la connexió i els permisos d\'edició.');
+      }
+    });
+  }
+}
 
-  appendToSheet([newId, cc, cu, ctipo, dataDisplay, vis, text], function(ok) {
-    saveBtn.disabled = false; saveBtn.textContent = 'Desar entrada';
+// ── ESBORRAR ──────────────────────────────────────────────────────────
+var pendingDeleteId = null;
+function confirmDelete(id) {
+  pendingDeleteId = id;
+  document.getElementById('confirm-bg').classList.add('show');
+  document.getElementById('confirm-ok').onclick = function() {
+    closeConfirm();
+    doDelete(pendingDeleteId);
+  };
+}
+function closeConfirm() {
+  document.getElementById('confirm-bg').classList.remove('show');
+  pendingDeleteId = null;
+}
+function doDelete(id) {
+  callScript({ action:'delete', id:id }, function(ok) {
     if (ok) {
-      entries.push({ id:String(newId), centre:cc, autor:cu, tipo:ctipo, data:dataIso, vis:vis, text:text });
-      if (!lastSeen[cu]) lastSeen[cu] = {};
-      lastSeen[cu][cc] = dataIso;
-      closeModal(); renderSidebar(); renderMain(cc);
-      showToast('Entrada desada correctament ✓');
+      entries = entries.filter(function(e){ return String(e.id)!==String(id); });
+      renderSidebar(); renderMain(cc);
+      showToast('Entrada esborrada ✓');
     } else {
-      alert('Error en desar al full de càlcul. Comprova la connexió i els permisos d\'edició.');
+      alert('Error en esborrar l\'entrada. Comprova la connexió.');
     }
   });
 }
 
-function appendToSheet(row, callback) {
+// ── APPS SCRIPT ───────────────────────────────────────────────────────
+function callScript(payload, callback) {
   fetch(APPS_SCRIPT_URL, {
     method: 'POST',
     mode: 'no-cors',
     headers: { 'Content-Type': 'text/plain' },
-    body: JSON.stringify({ row: row })
+    body: JSON.stringify(payload)
   }).then(function() {
-    // no-cors no permet llegir la resposta, però si no llança error és que ha arribat
     callback(true);
   }).catch(function(err) {
     console.error('Apps Script error:', err);
-    alert('Error de xarxa en contactar amb el servidor:\n' + err.message);
     callback(false);
   });
 }
